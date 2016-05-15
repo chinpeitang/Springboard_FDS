@@ -36,10 +36,10 @@ refine = cbind(refine[1], product_code, product_number, refine[3:6])
 
 # Rename products
 refine$product_code = as.character(refine$product_code)
-refine$product_code[grep(pattern = "p", x = refine$product_code)] = "Smartphone"
-refine$product_code[grep(pattern = "v", x = refine$product_code)] = "TV"
-refine$product_code[grep(pattern = "x", x = refine$product_code)] = "Laptop"
-refine$product_code[grep(pattern = "q", x = refine$product_code)] = "Tablet"
+refine$product_code[refine$product_code == "p"] = "Smartphone"
+refine$product_code[refine$product_code == "v"] = "TV"
+refine$product_code[refine$product_code == "x"] = "Laptop"
+refine$product_code[refine$product_code == "q"] = "Tablet"
 
 # Create full address column
 full_address = paste(refine$address, refine$city, refine$country, sep = ", ")
