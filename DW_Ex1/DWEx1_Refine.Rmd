@@ -2,7 +2,7 @@
 title: "Springboard Data Wrangling Exercise 1"
 author: "Chinpei Tang"
 date: "May 19, 2016"
-output: html_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
