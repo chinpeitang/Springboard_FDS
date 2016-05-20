@@ -1,0 +1,82 @@
+---
+title: "Springboard Data Wrangling Exercise 2 - Titanic"
+author: "Chinpei Tang"
+date: "May 19, 2016"
+output: pdf_document
+---
+## Set working directory
+First, save the titanic3.xls file to titanic_original.csv file, and set to the correct working directory.
+```{r}
+setwd("C:/Users/Chinpei/Documents/GitHub/Springboard_FDS/DW_Ex2")
+```
+
+## Load original data (_ex since Titanic is an available dataset in RStudio)
+Since "Titanic" is one of the preloaded dataset in RStudio, and to avoid overriding the dataset, the dataset is imported as "titanic_ex" (_ex means exercise). Also assign blank and space data to NA.
+```{r}
+titanic_ex = read.csv("titanic_original.csv", header = T, na.strings = c(""," "))
+```
+Examine the data.
+```{r}
+dim(titanic_ex)
+summary(titanic_ex)
+```
+There are 1310 observations, and 14 columns.
+
+## Port of embarkation
+Examine the NA's in embarked column.
+```{r}
+summary(titanic_ex$embarked)
+```
+In fact, there are actually 3 missing values instead of 1. Substitute the missing port of embarkation to "S". 
+```{r}
+titanic_ex$embarked[is.na(titanic_ex$embarked)] = "S"
+summary(titanic_ex$embarked)
+```
+Now there is no more NA.
+
+## Age
+Examine the NA's in age column.
+```{r}
+summary(titanic_ex$age)
+```
+There are 264 NA entries. Calculate the mean of the age ignoring the NA's.
+```{r}
+mean(titanic_ex$age, na.rm = T)
+```
+Substitute the NA's with the mean values.
+```{r}
+titanic_ex_agemean = titanic_ex
+titanic_ex_agemean$age[is.na(titanic_ex$age)] = mean(titanic_ex$age, na.rm = T)
+summary(titanic_ex_agemean$age)
+```
+Some other ways to populate the missing values are taking the median value.
+```{r}
+titanic_ex_agemed = titanic_ex
+titanic_ex_agemed$age[is.na(titanic_ex$age)] = median(titanic_ex$age, na.rm = T)
+summary(titanic_ex_agemed$age)
+```
+However, there is not much statistical difference between taking median or mean values. So use the mean age to substitute the average data.
+```{r}
+titanic_ex = titanic_ex_agemean
+```
+
+## Lifeboat
+NA has already been assigned to the blank or space data in the boat column.
+```{r}
+summary(titanic_ex$boat)
+titanic_ex$boat[is.na(titanic_ex$boat)]
+summary(titanic_ex$boat)
+```
+
+## Cabin
+Finally, create the "has_cabin_number" column for the passenger with cabin numbers.
+```{r}
+summary(titanic_ex$cabin)
+titanic_ex$has_cabin_number = as.integer(!is.na(titanic_ex$cabin))
+```
+
+## Write to clean file
+Write the new dataset to the clean csv file.
+```{r}
+write.csv(titanic_ex, file = "titanic_clean.csv")
+```
