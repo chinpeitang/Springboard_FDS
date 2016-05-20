@@ -1,0 +1,98 @@
+---
+title: "Springboard Data Wrangling Exercise 1"
+author: "Chinpei Tang"
+date: "May 19, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Introduction
+This basic exercise involves cleaning up the data with inconsistent inputs, renaming, separating and consolidating data, and creating new usable data for later analysis. A toy dataset was given, and a few basic tasks were assigned.
+
+## Load Data
+The given data is in Excel format. The "refine.xlsx" file was first opened in Excel and renamed to "refine_original.csv"" file, which can be read by RStudio.
+
+As a side note, a quick Google search revealed that there are methods import the xlsx file into RStudio directly, which is out of scope for this exercise.
+
+The csv file is saved in a working directory, and the working directory is set in RStudio. Since the dataset contains header, the dataset is read with header option set true. The dataset is then printed out to analyze.
+```{r}
+setwd("C:/Users/Chinpei/Documents/GitHub/Springboard_FDS/DW_Ex1")
+refine = read.csv("refine_original.csv", header = T)
+refine
+```
+
+## Consolidate company names
+The first task is to clean up the inconsistent company names. All the company names are printed, and the patterns are recognized.
+```{r}
+summary(refine$company)
+```
+Since the end results requires all the company names to be converted to lower case, tolower function (with the help of vapply) is applied:
+```{r}
+refine$company = vapply(refine$company, tolower, character(1))
+refine$company
+```
+The pattern recognition grep function is used to identify the patterns of the company names to be consolidated. It can be recognized that all "philips" contains term "ps", "akzo" contains term "ak", "van houten" contains term "van", and "unilever" contains term "uni".
+```{r}
+refine$company[grep(pattern = "ps", x = refine$company)] = "philips"
+refine$company[grep(pattern = "ak", x = refine$company)] = "akzo"
+refine$company[grep(pattern = "van", x = refine$company)] = "van houten"
+refine$company[grep(pattern = "uni", x = refine$company)] = "unilever"
+refine$company
+```
+## Separate "-" between codes and numbers
+Convert the "Product.code...number" into character, and use strsplit to recognize "-" and separate the product codes and number into "product_code" and "product_number" columns respectively.
+```{r}
+product_code_number = as.character(refine$Product.code...number)
+product_code_number = strsplit(product_code_number, split = "-")
+product_code = vapply(product_code_number, function(x){x[1]}, character(1))
+product_code
+product_number = vapply(product_code_number, function(x){x[2]}, character(1))
+product_number
+```
+Removed the "Product.code...number" column, and substitute with the "product_code" and "product_number" columns.
+```{r}
+refine = cbind(refine[1], product_code, product_number, refine[3:6])
+refine
+```
+## Rename products
+It is then straightforward to convert each product code with the defined product names.
+```{r}
+refine$product_code = as.character(refine$product_code)
+refine$product_code[refine$product_code == "p"] = "Smartphone"
+refine$product_code[refine$product_code == "v"] = "TV"
+refine$product_code[refine$product_code == "x"] = "Laptop"
+refine$product_code[refine$product_code == "q"] = "Tablet"
+refine
+```
+## Create full address column
+Use the paste function to combine the address, city and country, separating with ",", into "full_address" column. Append the column after the "country" column.
+```{r}
+full_address = paste(refine$address, refine$city, refine$country, sep = ", ")
+refine = cbind(refine[1:6], full_address, refine[7])
+refine
+```
+## Create binary variables columns for companies
+Create binary variable columns of "company_philips", "company_akzo", "company_van_houten", and "company_unilever" respectively for "philips", "akzo", "van houten", and "unilever".
+```{r}
+refine$company_philips = as.integer(refine$company == "philips")
+refine$company_akzo = as.integer(refine$company == "akzo")
+refine$company_van_houten = as.integer(refine$company == "van houten")
+refine$company_unilever = as.integer(refine$company == "unilever")
+refine
+```
+## Create binary variables columns for product categories
+Create binary variable columns of "product_smartphone", "product_tv", "product_laptop", and "product_tablet" respectively for "Smartphone", "TV", "Laptop", and "Tablet".
+```{r}
+refine$product_smartphone = as.integer(refine$product_code == "Smartphone")
+refine$product_tv = as.integer(refine$product_code == "TV")
+refine$product_laptop = as.integer(refine$product_code == "Laptop")
+refine$product_tablet = as.integer(refine$product_code == "Tablet")
+refine
+```
+## Write to clean file
+Finally, write the new dataset into the clean csv file.
+```{r}
+write.csv(refine, file = "refine_clean.csv")
+```

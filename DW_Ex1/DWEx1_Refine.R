@@ -2,9 +2,7 @@
 setwd("C:/Users/Chinpei/Documents/GitHub/Springboard_FDS/DW_Ex1")
 # Load original data
 refine = read.csv("refine_original.csv", header = T)
-# Check data
-summary(refine)
-dim(refine)
+refine
 
 # Consolidate company names
 summary(refine$company)
