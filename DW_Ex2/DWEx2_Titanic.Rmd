@@ -10,8 +10,8 @@ First, save the titanic3.xls file to titanic_original.csv file, and set to the c
 setwd("C:/Users/Chinpei/Documents/GitHub/Springboard_FDS/DW_Ex2")
 ```
 
-## Load original data 
-Since "Titanic" is one of the preloaded dataset in RStudio, and to avoid overriding the dataset, the dataset is imported as "titanic_ex" (_ex means exercise). Also assign blank and space data to NA.
+## Load original data
+Since "Titanic" is one of the preloaded dataset in RStudio, and to avoid overriding the dataset, the dataset is imported as "titanic_ex" (_ex means exercise). Also assign blank and space data to NA, which also solves problem 3 below.
 ```{r}
 titanic_ex = read.csv("titanic_original.csv", header = T, na.strings = c(""," "))
 ```
@@ -22,19 +22,22 @@ summary(titanic_ex)
 ```
 There are 1310 observations, and 14 columns.
 
-## Port of embarkation
+## Problem 1: Port of embarkation
 Examine the NA's in embarked column.
 ```{r}
 summary(titanic_ex$embarked)
 ```
-In fact, there are actually 3 missing values instead of 1. Substitute the missing port of embarkation to "S". 
+In fact, there are actually 3 missing values instead of 1. Substitute the missing port of embarkation to "S", which means that they embarked at Southampton.
 ```{r}
 titanic_ex$embarked[is.na(titanic_ex$embarked)] = "S"
+```
+Double check the results:
+```{r}
 summary(titanic_ex$embarked)
 ```
 Now there is no more NA.
 
-## Age
+## Problem 2: Age
 Examine the NA's in age column.
 ```{r}
 summary(titanic_ex$age)
@@ -60,22 +63,40 @@ However, there is not much statistical difference between taking median or mean 
 titanic_ex = titanic_ex_agemean
 ```
 
-## Lifeboat
+Some other ways to fill in the age values can be calculating the mean or median age values:
+
+* based on the class of the seats that the passengers. This idea is under the assumption that the older the individuals, the more capable the individuals afford the higher price of the class.
+* based on the fares the passengers paid. This idea is similar to the previous idea, but it is harder to define the range of the fare.
+* based on the port of embarkation. This is based on the assumption of the age distribution is depending on the city where the passanger lives in.
+
+If the above information is unavailable, just fill in with the overall mean. 
+
+## Problem 3: Lifeboat
 NA has already been assigned to the blank or space data in the boat column.
 ```{r}
 summary(titanic_ex$boat)
-titanic_ex$boat[is.na(titanic_ex$boat)]
-summary(titanic_ex$boat)
 ```
+There are 824 NA entries.
 
-## Cabin
-Finally, create the "has_cabin_number" column for the passenger with cabin numbers.
+## Problem 4: Cabin
+Examining the cabin details:
 ```{r}
 summary(titanic_ex$cabin)
+```
+
+There are 1015 NA entries. Examine these entries closer to some of the possible ways of filling in the values:
+```{r}
+summary(titanic_ex$fare[is.na(titanic_ex$cabin)])
+summary(titanic_ex$pclass[is.na(titanic_ex$cabin)])
+```
+Hence, there are some potentials to fill in the cabin details using the correlations of the fare, pclass, and age. However, there will be more work involved to analyze their correlations.
+
+Finally, create the "has_cabin_number" column for the passenger with cabin numbers.
+```{r}
 titanic_ex$has_cabin_number = as.integer(!is.na(titanic_ex$cabin))
 ```
 
-## Write to clean file
+## Problem 5: Write to clean file
 Write the new dataset to the clean csv file.
 ```{r}
 write.csv(titanic_ex, file = "titanic_clean.csv")
