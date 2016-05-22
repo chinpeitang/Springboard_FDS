@@ -10,7 +10,7 @@ First, save the titanic3.xls file to titanic_original.csv file, and set to the c
 setwd("C:/Users/Chinpei/Documents/GitHub/Springboard_FDS/DW_Ex2")
 ```
 
-## Load original data (_ex since Titanic is an available dataset in RStudio)
+## Load original data 
 Since "Titanic" is one of the preloaded dataset in RStudio, and to avoid overriding the dataset, the dataset is imported as "titanic_ex" (_ex means exercise). Also assign blank and space data to NA.
 ```{r}
 titanic_ex = read.csv("titanic_original.csv", header = T, na.strings = c(""," "))
