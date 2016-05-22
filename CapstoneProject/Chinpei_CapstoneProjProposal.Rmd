@@ -22,3 +22,6 @@ However, there has been some known issues with the dataset, so some work will ne
 * Get some familiarity to the monitored parameters to see if they relate to each other, then come out with hypothesis.
 * Test the hypothesis with some analysis methods.
 * May come out with scoring system to evaluate hard drive reliability.
+
+# Deliverables
+The analysis result will be delivered in a PDF report constructed using R Markdown. A slide deck will be created to present to the interested audience.
