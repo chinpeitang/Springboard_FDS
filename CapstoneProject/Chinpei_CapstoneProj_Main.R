@@ -1,0 +1,7 @@
+setwd("C:/Users/Chinpei/Documents/GitHub/Springboard_FDS/CapstoneProject/data_2015/2015")
+data1 = read.csv("2015-01-01.csv")
+library("ggplot2")
+str(data1)
+ggplot(data1, aes(x = capacity_bytes, y = failure)) + geom_point()
+ggplot(data1, aes(x = model, y = smart_1_normalized)) + geom_point()
+ggplot(data1, aes(x = model, y = smart_2_normalized)) + geom_point()
