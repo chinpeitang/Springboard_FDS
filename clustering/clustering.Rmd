@@ -1,0 +1,153 @@
+---
+title: "Clustering - Wine"
+author: "Chinpei Tang"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This mini-project is based on the K-Means exercise from 'R in Action' - see http://www.r-bloggers.com/k-means-clustering-from-r-in-action/.
+
+# Exercise 0
+
+* **Install these packages if you don't have them already**
+
+```{r}
+library("cluster")
+library("rattle")
+library("NbClust")
+library("flexclust")
+```
+
+# Exercise 1
+
+* **Remove the first column from the data and scale it using the scale() function**
+
+Now load the data and look at the first few rows.
+```{r}
+data(wine, package="rattle")
+head(wine)
+summary(wine)
+str(wine)
+```
+
+There are 178 observations and 13 different chemcical measurements of each of the wines.
+
+Remove the type of wine so that we can use clustering algorithm to cluster the types.
+```{r}
+wine.noType <- wine
+wine.noType$Type <- NULL
+summary(wine.noType)
+```
+
+Since the data are of different scales, use scale() function to appropriately scale the data.
+```{r}
+wine.noType.scaled <- scale(wine.noType)
+summary(wine.noType.scaled)
+```
+
+Now we'd like to cluster the data using k-means method. k-means method requires the specification of the number of clusters, so we need to first decide how many clusters to use.
+
+## Method 1
+
+A plot of the total within-groups sums of squares against the number of clusters in a K-means solution can be helpful. A bend in the graph can suggest the appropriate number of clusters. 
+
+```{r}
+wssplot <- function(data, nc=15, seed=1234){
+                    wss <- (nrow(data)-1)*sum(apply(data,2,var))
+               	    for (i in 2:nc){
+		                  set.seed(seed)
+	                    wss[i] <- sum(kmeans(data, centers=i)$withinss)}
+	                
+		                plot(1:nc, wss, type="b", xlab="Number of Clusters",
+                      ylab="Within groups sum of squares")
+	          }
+wssplot(wine.noType.scaled)
+```
+
+Looking at the plot, since the sum of squares are significant between 1 and 2, and 2 and 3, then doesn't change much after 3, k = 3 is a good number of clusters.
+
+# Exercise 2
+
+* **How many clusters does this method suggest?**
+
+This method suggests k = 3 clusters.
+
+* **Why does this method work? What's the intuition behind it?**
+
+It looks into the sum of squares within the cluster, which is roughly how spreaded out a cluster. We want a reasonably sized cluster, so we want to reduce the sum of squares of within clusters. We can see significant improvement from 1 cluster to 2 clusters, then more improvement from 2 clusters to 3 clusters. However, the improvement from 3 clusters to 4 clusters started to decrease. This means that adding more clusters actually not distinguish too much of some of the clusters. Furthermore, if may be "overfitting" some of the features.
+
+* **Look at the code for wssplot() and figure out how it works**
+
+The wssplot functions determine sum of within-cluster sum of squares of varying number of clusters determined by a k-means method from 2 to maximum number of nc. The nc is the maximum number of clusters to consider, which is 15 in this case. The seed is the random-number seed to ensure reproducible result since k-means require initial random guess of centroids. It plots the sum of the within-cluster sum of squares over the number of clusters k tried.
+
+# Method 2
+
+Use the NbClust library, which runs many experiments and gives a distribution of potential number of clusters.
+
+```{r}
+set.seed(1234)
+nc <- NbClust(wine.noType.scaled, min.nc=2, max.nc=15, method="kmeans")
+barplot(table(nc$Best.n[1,]),
+	          xlab="Numer of Clusters", ylab="Number of Criteria",
+		            main="Number of Clusters Chosen by 26 Criteria")
+```
+
+# Exercise 3
+
+* **How many clusters does this method suggest?**
+
+The NbClust method clearly suggested k = 3 clusters.
+
+# Exercise 4 
+
+* **Once you've picked the number of clusters, run k-means using this number of clusters. Output the result of calling kmeans() into a variable fit.km**
+
+```{r}
+fit.km <- kmeans(wine.noType.scaled, centers = 3)
+fit.km
+```
+
+Now we want to evaluate how well this clustering does.
+
+# Exercise 5
+
+* **Using the table() function, show how the clusters in ct.km compares to the actual wine types. Would you consider this a good clustering?**
+
+```{r}
+ct.km <- table(wine$Type, fit.km$cluster)
+ct.km
+randIndex(ct.km)
+```
+
+It predicts 89.75% accuracy, which is pretty good.
+
+# Exercise 6
+
+* **Visualize these clusters using  function clusplot() from the cluster library.**
+
+clusplot() can only be used for Partitioning Around Medoids (PAM), Clustering Large Applications (CLARA) and Fuzzy Analysis Clustering (FANNY) methods. So these methods are tried here with the same selection of k = 3. However, only PAM and CLARA works since k = 3 is too small for the FANNY method.
+
+For PAM method, it predicts about 74.11% accuracy.
+```{r}
+fit.pam <- pam(wine.noType.scaled, k = 3)
+ct.pam <- table(wine$Type, fit.pam$clustering)
+ct.pam
+randIndex(ct.pam)
+clusplot(fit.pam)
+```
+
+For CLARA method, it predicts about 81.42% acccuracy.
+```{r}
+fit.clara <- clara(wine.noType.scaled, k = 3)
+ct.clara <- table(wine$Type, fit.clara$clustering)
+ct.clara
+randIndex(ct.clara)
+clusplot(fit.clara)
+```
+
+* **Would you consider this a good clustering?**
+
+We can see that k-means is the best clustering method at 89.75% accuracy. Next best is CLARA at 81.24% accuracy. Worst is PAM at 74.11% accuracy.
