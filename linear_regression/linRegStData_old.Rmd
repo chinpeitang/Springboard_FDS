@@ -1,0 +1,125 @@
+---
+title: "Linear Regression - US State Environmental Impact"
+author: "Chinpei Tang"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#Library
+
+Load the required library.
+
+```{r}
+library(ggplot2)
+```
+
+#Introduction
+
+The dataset is some general US states statistical data from 1990-1991 that appears to be used to examine each of the state's environmental impact based on some of the potential key statistical characteristics. The data includes geographical information such as general population (in square miles, % in metropolitan area), and land area; environmental impact information such as per capita solid waste, energy consumed, toxics released, greenhouse gas; political voting performance in both house and senate (see this [link](http://scorecard.lcv.org)); people's educational level such as mean SAT scores, % of adult high school and college graduates; and some financial details such as per pupil expenditures (primary & secondary schools) (see this [link](http://www.doe.mass.edu/finance/statistics/ppx.html)) and household incomes.
+
+This exercise can be found on this [website](http://tutorials.iq.harvard.edu/R/Rstatistics/Rstatistics.html).
+
+#Loading the Data
+
+```{r}
+# Set working directory
+setwd("C:/Users/Chinpei/Documents/GitHub/Springboard_FDS/linear_regression")
+# Read the states data. Note that the data is is RDS format
+states.data <- readRDS("dataSets/states.rds")
+```
+
+#Examine the Data
+
+```{r}
+str(states.data)
+summary(states.data)
+```
+
+Upon examining the data frame, it is found that there are attributes that describing the dataset. The following command was used to examine what the attributes mean:
+
+```{r}
+states.info <- data.frame(attributes(states.data)[c("datalabel", "time.stamp", 
+"formats", "types", "val.labels", "var.labels", "expansion.fields", "version", "names")])
+```
+
+The author is unable to examine the "label.table" attributes. However, the rest of the attributes look like the following:
+
+* datalabel: basically just says that these are U.S. states data in 1990-1991.
+* time.stamp: the time the data is downloaded. They are all on Apr 6, 2012.
+* formats: the data format: string, number format with the number of digits and decimal points.
+* types: not exactly sure, but it looks like the amount of memory required.
+* region: not exactly sure either, but there is only one data entry for "Geograhical region".
+* __var.labels__: these labels explains what each of the name of the variable means, which is important.
+* expansion.field: not exactly sure, but it looks like more attributes to each of the variable.
+* version: probably the version of this dataset, which is 12 for all of them.
+* __names__: the variable names, which is important.
+
+```{r}
+data.frame(attributes(states.data)[c("names", "var.labels")])
+```
+
+#Linear Regression
+
+##Pupil Expenditures and SAT Scores
+
+First examine the correlation between per pupil expenditures (expense) and composite SAT score (csat).
+
+```{r}
+pl.sp.csat.exp <- ggplot(states.data, aes(x = expense, y = csat)) + geom_point(size = 1.5)
+pl.sp.csat.exp
+```
+
+Perform a linear regression
+```{r}
+lm.csat.exp <- lm(csat~expense, data=states.data)
+summary(lm.csat.exp)
+class(lm.csat.exp)
+names(lm.csat.exp)
+confint(lm.csat.exp)
+plot(lm.csat.exp)
+```
+
+Plot it on the graph
+```{r}
+pl.sp.lm.csat.exp <- pl.sp.csat.exp + stat_smooth(method = lm)
+pl.sp.lm.csat.exp
+```
+
+```{r}
+df.csat.exp.percent <- states.data[c("csat", "expense", "percent")]
+plot(df.csat.exp.percent)
+summary(lm(csat ~ ., data = df.csat.exp.percent))
+confint(lm(csat ~ ., data = df.csat.exp.percent))
+plot(lm(csat ~ ., data = df.csat.exp.percent))
+```
+
+What if we do linear regression on all the variables:
+```{r}
+states.data.num <- states.data[c("pop", "area", "density", "metro", "waste", "energy", 
+"miles", "toxic", "green", "house", "senate", "csat", "vsat", "msat", "percent", 
+"expense", "income", "high", "college")]
+states.data.num.na.omit <- na.omit(states.data.num)
+lm.csat.all <- lm(energy~., data=data.frame(states.data.num.na.omit))
+summary(lm.csat.all)
+```
+
+For the exercise:
+
+```{r}
+sts.percent.energy <- subset(states.data, select = c("percent", "energy"))
+summary(sts.percent.energy)
+sts.percent.energy <- na.omit(sts.percent.energy)
+summary(sts.percent.energy)
+plot(sts.percent.energy)
+cor(sts.percent.energy)
+
+per.energy.mod <- summary(lm(energy~percent, data = states.data))
+per.energy.mod
+```
+
+1. __do some exploratory analysis using a full plots__
+2. __identify the major correlations using the full plots__
+3. __use ggplot to plot the data with the linear lines__
+

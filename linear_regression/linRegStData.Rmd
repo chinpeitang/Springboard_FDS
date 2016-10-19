@@ -1,20 +1,37 @@
 ---
 title: "Linear Regression - US State Environmental Impact"
 author: "Chinpei Tang"
-date: "August 30, 2016"
-output: pdf_document
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-#Introduction
+**Use the /states.rds/ data set. Fit a model predicting energy consumed per capita (energy) from the percentage of residents living in metropolitan areas (metro). Be sure to:**
+
+**1. Examine/plot the data before fitting the model**
+
+**2. Print and interpret the model `summary'**
+
+**3. `plot' the model to look for deviations from modeling assumptions**
+
+**Select one or more additional predictors to add to your model and repeat steps 1-3. Is this model significantly better than the model with /metro/ as the only predictor?**
+
+Load the required library.
+
+```{r}
+library(ggplot2)
+```
+
+#Data Examination
+
 The dataset is some general US states statistical data from 1990-1991 that appears to be used to examine each of the state's environmental impact based on some of the potential key statistical characteristics. The data includes geographical information such as general population (in square miles, % in metropolitan area), and land area; environmental impact information such as per capita solid waste, energy consumed, toxics released, greenhouse gas; political voting performance in both house and senate (see this [link](http://scorecard.lcv.org)); people's educational level such as mean SAT scores, % of adult high school and college graduates; and some financial details such as per pupil expenditures (primary & secondary schools) (see this [link](http://www.doe.mass.edu/finance/statistics/ppx.html)) and household incomes.
 
 This exercise can be found on this [website](http://tutorials.iq.harvard.edu/R/Rstatistics/Rstatistics.html).
 
-#Loading the Data
+Loading the data:
+
 ```{r}
 # Set working directory
 setwd("C:/Users/Chinpei/Documents/GitHub/Springboard_FDS/linear_regression")
@@ -22,16 +39,20 @@ setwd("C:/Users/Chinpei/Documents/GitHub/Springboard_FDS/linear_regression")
 states.data <- readRDS("dataSets/states.rds")
 ```
 
-#Examine the Data
+Examining the data:
+
 ```{r}
 str(states.data)
 summary(states.data)
 ```
+
 Upon examining the data frame, it is found that there are attributes that describing the dataset. The following command was used to examine what the attributes mean:
+
 ```{r}
 states.info <- data.frame(attributes(states.data)[c("datalabel", "time.stamp", 
 "formats", "types", "val.labels", "var.labels", "expansion.fields", "version", "names")])
 ```
+
 The author is unable to examine the "label.table" attributes. However, the rest of the attributes look like the following:
 
 * datalabel: basically just says that these are U.S. states data in 1990-1991.
@@ -48,61 +69,95 @@ The author is unable to examine the "label.table" attributes. However, the rest 
 data.frame(attributes(states.data)[c("names", "var.labels")])
 ```
 
-#Linear Regression
-##Pupil Expenditures and SAT Scores
-First examine the correlation between per pupil expenditures (expense) and composite SAT score (csat).
-```{r}
-library(ggplot2)
-pl.sp.csat.exp <- ggplot(states.data, aes(x = expense, y = csat)) + geom_point(size = 1.5)
-pl.sp.csat.exp
-```
-Perform a linear regression
-```{r}
-lm.csat.exp <- lm(csat~expense, data=states.data)
-summary(lm.csat.exp)
-class(lm.csat.exp)
-names(lm.csat.exp)
-confint(lm.csat.exp)
-plot(lm.csat.exp)
-```
-Plot it on the graph
-```{r}
-pl.sp.lm.csat.exp <- pl.sp.csat.exp + stat_smooth(method = lm)
-pl.sp.lm.csat.exp
-```
-```{r}
-df.csat.exp.percent <- states.data[c("csat", "expense", "percent")]
-plot(df.csat.exp.percent)
-summary(lm(csat ~ ., data = df.csat.exp.percent))
-confint(lm(csat ~ ., data = df.csat.exp.percent))
-plot(lm(csat ~ ., data = df.csat.exp.percent))
-```
+Now, we look into the energy consumed per capita (energy) from the percentage of residents living in metropolitan areas (metro).
 
-What if we do linear regression on all the variables:
+For analysis convenience, gather the states.data with only the numerical values into states.data.num, also removed all the NA's.
+
 ```{r}
 states.data.num <- states.data[c("pop", "area", "density", "metro", "waste", "energy", 
 "miles", "toxic", "green", "house", "senate", "csat", "vsat", "msat", "percent", 
 "expense", "income", "high", "college")]
-states.data.num.na.omit <- na.omit(states.data.num)
-lm.csat.all <- lm(energy~., data=data.frame(states.data.num.na.omit))
-summary(lm.csat.all)
+states.data.num <- na.omit(states.data.num)
+summary(states.data.num)
 ```
 
-For the exercise:
+Look at the scattered plot and correlation between metro and energy data.
 
 ```{r}
-sts.percent.energy <- subset(states.data, select = c("percent", "energy"))
-summary(sts.percent.energy)
-sts.percent.energy <- na.omit(sts.percent.energy)
-summary(sts.percent.energy)
-plot(sts.percent.energy)
-cor(sts.percent.energy)
-
-per.energy.mod <- summary(lm(energy~percent, data = states.data))
-per.energy.mod
+energy.metro.baseplot <- ggplot(states.data.num, aes(x = metro, y = energy)) + geom_point(size = 1.5)
+energy.metro.baseplot
+cor(subset(states.data.num, select = c("metro", "energy")))
 ```
 
-1. __do some exploratory analysis using a full plots__
-2. __identify the major correlations using the full plots__
-3. __use ggplot to plot the data with the linear lines__
+It can be noticed that there are not too much correlations.
 
+#Linear Regression
+
+Perform a linear regression between energy and metro:
+
+```{r}
+summary(lm(energy~metro, data = states.data.num))
+energy.metro.baseplot + stat_smooth(method = lm)
+```
+
+Now, look the correlation between energy and all the other variables.
+
+```{r}
+summary(lm(energy ~ ., data = states.data.num))
+```
+
+Progressively removing the variable that has low correlations:
+```{r}
+summary(lm(energy ~ . - msat, 
+           data = states.data.num))
+summary(lm(energy ~ . - msat - csat, 
+           data = states.data.num))
+summary(lm(energy ~ . - msat - csat - house, 
+           data = states.data.num))
+summary(lm(energy ~ . - msat - csat - house - density, 
+           data = states.data.num))
+summary(lm(energy ~ . - msat - csat - house - density - income, 
+           data = states.data.num))
+summary(lm(energy ~ . - msat - csat - house - density - income - waste, 
+           data = states.data.num))
+summary(lm(energy ~ . - msat - csat - house - density - income - waste - senate, 
+           data = states.data.num))
+summary(lm(energy ~ . - msat - csat - house - density - income - waste - senate 
+           - vsat, data = states.data.num))
+summary(lm(energy ~ . - msat - csat - house - density - income - waste - senate 
+           - vsat - high, data = states.data.num))
+summary(lm(energy ~ . - msat - csat - house - density - income - waste - senate 
+           - vsat - high - pop, data = states.data.num))
+summary(lm(energy ~ . - msat - csat - house - density - income - waste - senate 
+           - vsat - high - pop - percent, data = states.data.num))
+summary(lm(energy ~ . - msat - csat - house - density - income - waste - senate 
+           - vsat - high - pop - percent - metro, data = states.data.num))
+summary(lm(energy ~ . - msat - csat - house - density - income - waste - senate 
+           - vsat - high - pop - percent - metro - miles, data = states.data.num))
+summary(lm(energy ~ . - msat - csat - house - density - income - waste - senate 
+           - vsat - high - pop - percent - metro - miles - expense, data = states.data.num))
+summary(lm(energy ~ . - msat - csat - house - density - income - waste - senate 
+           - vsat - high - pop - percent - metro - miles - expense - college, data = states.data.num))
+summary(lm(energy ~ . - msat - csat - house - density - income - waste - senate 
+           - vsat - high - pop - percent - metro - miles - expense - college - area, data = states.data.num))
+```
+
+We can see that per capita toxics and greenhouse gas released have very strong correlation with the energy consumed per capita. The correlation makes sense, but the causality may be reversed since it is the energy consumption that cause the releases of toxic and greenhouse gas. We can plot the graphs to show the trends.
+
+```{r}
+ggplot(states.data.num, aes(x = toxic, y = energy)) + geom_point(size = 1.5) + stat_smooth(method = lm)
+ggplot(states.data.num, aes(x = green, y = energy)) + geom_point(size = 1.5) + stat_smooth(method = lm)
+```
+
+However, let's see if we take out toxic and green to see if there is any other factors that may have better correlation that cause higher energy consumption.
+
+```{r}
+summary(lm(energy ~ . - msat - toxic - green, data = states.data.num))
+```
+
+It turned out that the miles of roads built and the house voting on environmental bill have pretty high impact on the energy consumption. The interesting part is the correlation between the house bill voted is negative to the energy consumption, which means that the more energy bill voted, the less energy consumption will be. Here are the correlation plots:
+
+```{r}
+ggplot(states.data.num, aes(x = miles, y = energy)) + geom_point(size = 1.5) + stat_smooth(method = lm)
+ggplot(states.data.num, aes(x = house, y = energy)) + geom_point(size = 1.5) + stat_smooth(method = lm)
+```
