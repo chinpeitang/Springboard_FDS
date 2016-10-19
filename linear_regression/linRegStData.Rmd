@@ -1,12 +1,14 @@
 ---
 title: "Linear Regression - US State Environmental Impact"
 author: "Chinpei Tang"
-output: html_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+#Exercise 1: Least Squares Regression
 
 **Use the /states.rds/ data set. Fit a model predicting energy consumed per capita (energy) from the percentage of residents living in metropolitan areas (metro). Be sure to:**
 
@@ -24,7 +26,7 @@ Load the required library.
 library(ggplot2)
 ```
 
-#Data Examination
+##Data Examination
 
 The dataset is some general US states statistical data from 1990-1991 that appears to be used to examine each of the state's environmental impact based on some of the potential key statistical characteristics. The data includes geographical information such as general population (in square miles, % in metropolitan area), and land area; environmental impact information such as per capita solid waste, energy consumed, toxics released, greenhouse gas; political voting performance in both house and senate (see this [link](http://scorecard.lcv.org)); people's educational level such as mean SAT scores, % of adult high school and college graduates; and some financial details such as per pupil expenditures (primary & secondary schools) (see this [link](http://www.doe.mass.edu/finance/statistics/ppx.html)) and household incomes.
 
@@ -91,7 +93,7 @@ cor(subset(states.data.num, select = c("metro", "energy")))
 
 It can be noticed that there are not too much correlations.
 
-#Linear Regression
+##Linear Regression
 
 Perform a linear regression between energy and metro:
 
@@ -145,6 +147,7 @@ summary(lm(energy ~ . - msat - csat - house - density - income - waste - senate
 We can see that per capita toxics and greenhouse gas released have very strong correlation with the energy consumed per capita. The correlation makes sense, but the causality may be reversed since it is the energy consumption that cause the releases of toxic and greenhouse gas. We can plot the graphs to show the trends.
 
 ```{r}
+summary(lm(energy ~ toxic + green, data = states.data.num))
 ggplot(states.data.num, aes(x = toxic, y = energy)) + geom_point(size = 1.5) + stat_smooth(method = lm)
 ggplot(states.data.num, aes(x = green, y = energy)) + geom_point(size = 1.5) + stat_smooth(method = lm)
 ```
@@ -158,6 +161,40 @@ summary(lm(energy ~ . - msat - toxic - green, data = states.data.num))
 It turned out that the miles of roads built and the house voting on environmental bill have pretty high impact on the energy consumption. The interesting part is the correlation between the house bill voted is negative to the energy consumption, which means that the more energy bill voted, the less energy consumption will be. Here are the correlation plots:
 
 ```{r}
+summary(lm(energy ~ miles + house, data = states.data.num))
 ggplot(states.data.num, aes(x = miles, y = energy)) + geom_point(size = 1.5) + stat_smooth(method = lm)
 ggplot(states.data.num, aes(x = house, y = energy)) + geom_point(size = 1.5) + stat_smooth(method = lm)
 ```
+
+#Exercise 1: Interactions and Factors
+
+**Use the states data set.**
+
+**1. Add on to the regression equation that you created in exercise 1 by generating an interaction term and testing the interaction.**
+
+**2. Try adding region to the model. Are there significant differences across the four regions?**
+
+##Interactions
+
+Let's say we looked at miles and house we explored in the previous exercise:
+
+```{r}
+summary(lm(energy ~ miles*house, data = states.data.num))
+```
+
+We can see that independently miles of road have higher impact to the energy consumption than house bill voted. Additional of house bill voted to the miles built has negative impact to miles built factor, and vice versa.
+
+##Region
+
+First, let's look at the region data:
+```{r}
+summary(states.data$region)
+```
+
+If we look at the correlation of the energy consumption to the region:
+
+```{r}
+summary(lm(energy ~ region, data = states.data))
+```
+
+We can see that the North East region has higher impact on the energy consumption per capita in the US.
