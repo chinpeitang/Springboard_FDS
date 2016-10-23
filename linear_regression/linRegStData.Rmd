@@ -1,7 +1,7 @@
 ---
 title: "Linear Regression - US State Environmental Impact"
 author: "Chinpei Tang"
-output: pdf_document
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -166,7 +166,7 @@ ggplot(states.data.num, aes(x = miles, y = energy)) + geom_point(size = 1.5) + s
 ggplot(states.data.num, aes(x = house, y = energy)) + geom_point(size = 1.5) + stat_smooth(method = lm)
 ```
 
-#Exercise 1: Interactions and Factors
+#Exercise 2: Interactions and Factors
 
 **Use the states data set.**
 
