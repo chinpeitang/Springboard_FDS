@@ -23,7 +23,7 @@
 ##         health objectives.
 
 ##   Load the National Health Interview Survey data:
-
+setwd("C:/Users/Chinpei/Documents/GitHub/Springboard_FDS/logistic_regression")
 NH11 <- readRDS("dataSets/NatHealth2011.rds")
 labs <- attributes(NH11)$labels
 

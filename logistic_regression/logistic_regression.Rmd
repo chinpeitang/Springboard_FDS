@@ -1,0 +1,81 @@
+---
+title: "Logistic Regression - National Health Interview Survey"
+author: "Chinpei Tang"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Exercise 1: Logistic Regression
+
+**Use the NH11 data set that we loaded earlier.**
+
+**1. Use glm to conduct a logistic regression to predict ever worked (everwrk) using age (age$_p$) and marital status ($r_{maritl}$).**
+
+**2. Predict the probability of working for each level of marital status.**
+
+**Note that the data is not perfectly clean and ready to be modeled. You will need to clean up at least some of the variables before fitting the model.**
+
+Load the required library.
+
+```{r}
+library(ggplot2)
+library(effects)
+library(dplyr)
+```
+
+First, load the data into the workspace:
+
+```{r}
+setwd("C:/Users/Chinpei/Documents/GitHub/Springboard_FDS/logistic_regression")
+NH11 <- readRDS("dataSets/NatHealth2011.rds")
+```
+
+Then, examine the data:
+
+```{r}
+summary(NH11)
+str(NH11)
+```
+
+We are looking at the following specific data:
+
+* **Ever worked (everwrk):** 5-level factors with 18949 NA's. The 5 levels are: "1 Yes", "2 No", "7 Refused", "8 Not ascertained" and "9 Don't know".
+
+* **Age (age_p):** continuous variable between 18 and 85. No NA.
+
+* **Marital status (r_maritl):** 10-level factors with 6 major reported factors, and 605 observations grouped in "Other".
+
+Now collect only the above 3 data into a single data frame:
+
+```{r}
+NH11.ear <- NH11[c("everwrk", "age_p", "r_maritl")]
+summary(NH11.ear)
+```
+
+Since there is a significant number of NA's in everwrk data, and logistic regression (and our interest) is the Yes and No prediction, we will omit the NA and "7 Refused", "8 Not ascertained" and "9 Don't know" data:
+
+```{r}
+NH11.ear$everwrk <- factor(NH11.ear$everwrk, levels = c("2 No", "1 Yes"))
+summary(NH11.ear)
+```
+
+Then do prediction using logistic regression:
+
+```{r}
+everwrk.pred <- glm(everwrk ~ age_p + r_maritl, data = NH11.ear, family = binomial)
+summary(everwrk.pred)
+```
+
+Then, use the "effects" package to look at the probabilities of each of the cases:
+
+```{r}
+summary(allEffects(everwrk.pred))
+plot(allEffects(everwrk.pred))
+```
+
+We can see that the higher the age is, the higher the probability the individual has ever worked, which makes sense.
+
+For marital status, the divorced case has the highest probability of ever worked at 94.5%.
