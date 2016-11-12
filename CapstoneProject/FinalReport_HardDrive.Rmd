@@ -1,8 +1,9 @@
 ---
-title: Springboard Foundation of Data Science Capstone Project - Hard Drive Reliability - Survival Analysis
+title: Springboard Foundation of Data Science Capstone Project - Hard Drive Reliability
+  - Survival Analysis
 author: "Chinpei Tang"
-date: November 11, 2016
-output: html_document
+date: "November 11, 2016"
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
