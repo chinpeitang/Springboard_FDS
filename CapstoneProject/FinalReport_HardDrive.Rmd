@@ -1,7 +1,7 @@
 ---
-title: Springboard Foundation of Data Science Capstone Project - Survival Analysis
-  of Hard Drives
+title: Springboard Foundation of Data Science Capstone Project - Hard Drive Reliability - Survival Analysis
 author: "Chinpei Tang"
+date: November 11, 2016
 output: html_document
 ---
 
@@ -257,11 +257,11 @@ The suitable analysis to be studied on the data is the survival analysis. [Survi
 * **David Madigan Notes from Columbia University**: More in-depth explanation with R examples. [http://www.stat.columbia.edu/~madigan/W2025/notes/survival.pdf](http://www.stat.columbia.edu/~madigan/W2025/notes/survival.pdf)
 * **"Survival Analysis - A Self-Learning Text, 3rd Edition" Book**: Springer textbook by David G. Kleinbaum and Mitchel Klein. [http://www.springer.com/us/book/9781441966452](http://www.springer.com/us/book/9781441966452)
 
-The key of the survival analysis is the following concept. Suppose the probability that the duration time of less than $t$ is $F(t) = Prob(T \leq t) = \int_0^t f(s) ds$, then the *survival function* is the probability that the duration of at least $t$ as $S(t) = 1 - F(t) = Prob(T \geq t)$. *Hazard rate* is defined as the probability that the duration will end after time $t$ given that it has lasted until time $t$ as $\lambda(t) = \frac{f(t)}{S(t)}$. The hazard rate is the probability that a subject experiences the event at time $t$ while that subject is at risk for experiencing that event.
+The key of the survival analysis is the following concept. Suppose the probability that the duration time of less than $t$ is $F(t) = Pr(T \leq t) = \int_0^t f(s) ds$, then the *survival function* is the probability that the duration of at least $t$ as $S(t) = 1 - F(t) = Pr(T \geq t)$. *Hazard rate* is defined as the probability that the duration will end after time $t$ given that it has lasted until time $t$ as $\lambda(t) = \frac{f(t)}{S(t)}$. The hazard rate is the probability that a subject experiences the event at time $t$ while that subject is at risk for experiencing that event.
 
 In the case of hard drive, our interest is to understand the expected duration of the hard drive can "survive" on the shelf before it fails. This is important since the datacenter like BackBlaze can: (a) favorbly procure the hard drives that have high "survival" period, (b) optimize the time for procuring the replacement, i.e. not procuring too early to store too much inventory, or too late that affect the uptime.
 
-##Survival Models
+##Survival and Hazard Models
 This section provides very high level description of survival model analysis. Please consult the references in the previous subsection for more information.
 
 Generally, the survival function is decreasing over time. There are three types of models to model such survival functions and the corresponding hazard rate: (a) non-parametric models, (b) parametric models, and (c) semi-parametric.
@@ -312,7 +312,7 @@ load(file = "C:/Users/Chinpei/Documents/R/HardDriveReliability/SurvivalAnalysisD
 
 # Kaplan-Meier non-parametric analysis
 kmsurvival <- survfit(Surv(allSurvival$spell, allSurvival$event) ~ 1)
-str(kmsurvival)
+#summary(kmsurvival)
 plot(kmsurvival, lwd = 2.0, xlab = "Days", ylab = "Survival Probability")
 title("Kaplan-Meier - Overall")
 
@@ -326,6 +326,8 @@ title("Nelson-Aalen - Overall")
 coxph <- coxph(Surv(allSurvival$spell, allSurvival$event) ~ 1, method = "breslow")
 summary(coxph)
 ```
+
+Overall, it can be seen that hard drives are pretty reliable products where the survival probability stays above 85% at about 1200 days (3+ years) of operation.
 
 ##Survival based on Different Brand/Manufacturer
 ```{r}
@@ -351,23 +353,27 @@ coxph <- coxph(Surv(allBrandSurvival$spell, allBrandSurvival$event) ~ allBrandSu
 summary(coxph)
 ```
 
+It can be seen that HGST and Hitachi hard drives have the highest survival probability, while Toshiba and Seagate have the lowest survival probability. However, when looking at the hazard rate, Samsung has more risk, but it has the least history amount the other drives. With comparable history WDC probably has the highest risk. Hence, Hitachi may be the highest reliability hard drive.
+
 ##Survival based on Different Size/Capacity
 ```{r}
 library(survival)
 load(file = "C:/Users/Chinpei/Documents/R/HardDriveReliability/SurvivalAnalysisData/allSizeSurvival.RData")
 
+color12 <- c("#8B8378", "#458B74", "#0000FF", "#8A2BE2", "#A52A2A", "#CD3333", "#8B7355", "#7FFF00", "#556B2F", "#8B008B", "#EEC900", "#000000")
+
 # Kaplan-Meier non-parametric analysis
 kmsurvival <- survfit(Surv(allSizeSurvival$spell, allSizeSurvival$event) ~ allSizeSurvival$TB)
 #summary(kmsurvival)
-plot(kmsurvival, col = c(1:12), lwd = 2.0, xlab = "Days", ylab = "Survival Probability")
-legend("bottomleft", c("0.08 TB", "0.16 TB", "0.25 TB", "0.32 TB", "0.50 TB", "1.00 TB", "1.50 TB", "2.00 TB", "3.00 TB", "4.00 TB", "5.00 TB", "6.00 TB"), col = c(1:12), lwd = 2.0)
+plot(kmsurvival, col = color12, lwd = 2.0, xlab = "Days", ylab = "Survival Probability")
+legend("bottomleft", c("0.08 TB", "0.16 TB", "0.25 TB", "0.32 TB", "0.50 TB", "1.00 TB", "1.50 TB", "2.00 TB", "3.00 TB", "4.00 TB", "5.00 TB", "6.00 TB"), col = color12, lwd = 2.0)
 title("Kaplan-Meier - Different Size/Capacity")
 
 # Nelson-Aalen non-parametric analysis
 nasurvival <- survfit(coxph(Surv(allSizeSurvival$spell, allSizeSurvival$event) ~ allSizeSurvival$TB), type = "aalen")
 #summary(nasurvival)
-plot(nasurvival, col = c(1:12), lwd = 2.0, xlab = "Days", ylab = "Survival Probability")
-legend("bottomleft", c("0.08 TB", "0.16 TB", "0.25 TB", "0.32 TB", "0.50 TB", "1.00 TB", "1.50 TB", "2.00 TB", "3.00 TB", "4.00 TB", "5.00 TB", "6.00 TB"), col = c(1:12), lwd = 2.0)
+plot(nasurvival, col = color12, lwd = 2.0, xlab = "Days", ylab = "Survival Probability")
+legend("bottomleft", c("0.08 TB", "0.16 TB", "0.25 TB", "0.32 TB", "0.50 TB", "1.00 TB", "1.50 TB", "2.00 TB", "3.00 TB", "4.00 TB", "5.00 TB", "6.00 TB"), col = color12, lwd = 2.0)
 title("Nelson-Aalen - Different Size/Capacity")
 
 # Cox proportional hazard model - coefficients and hazard rates
@@ -375,6 +381,33 @@ coxph <- coxph(Surv(allSizeSurvival$spell, allSizeSurvival$event) ~ allSizeSurvi
 summary(coxph)
 ```
 
+It can be seen that, with comparable history, from highest to lowest survival probability, 
+3 TB has the highest survival probability, followed by 5 TB, then 4 TB. Large drive like 6 TB has only about 500 days of history, so it is a bit early to tell its survival performance. The smaller drives are less important since they are not very useful today. In terms of hazard rate, it can be seen that 2 TB, 4 TB and 6 TB have the best hazard performance. Hence, probably the 4 TB drives are recommended.
+
 #Conclusion
+The study is very preliminary since only brand/manufacturer and size/capacity are evaluated. In this study, Hitachi has the best reliability, Toshiba and Seagate have the least reliability. 3 TB, 5 TB and 4 TB drives have high survival rates, but 2 TB, 4 TB and 6 TB drive have the lowest hazard rates.
+The recommendation is to use Hitachi and 4 TB drives with highest survival probabiliity and lowest hazard rate.
+
+The analysis have some limitation. First, the reliability of the hard drive data collection may affect the results. As seen in the exploratory time-series plots, quite significant amount of data were dropped or missing. Then, the performance can also be heavily affected by some external factors, i.e. how the data center install the hard drives, and the quantity of each of the models. Overall, the project produces reasonable analytical results for decision making.
 
 ##Future Work
+There are a lot of future avenue for this work. Survival analysis of each model (about 100+ of them) for more serious consideration. The censoring of the data needs to be investigated more carefully. Finally, the time-series SMART data should be taken into account for much more advanced analysis.
+
+#Notes to the Codes
+The codes can be found at: [https://github.com/chinpeitang/Springboard_FDS/tree/master/CapstoneProject](https://github.com/chinpeitang/Springboard_FDS/tree/master/CapstoneProject).
+
+The hard drive data by Backblaze can be downloaded at: [https://www.backblaze.com/b2/hard-drive-test-data.html](https://www.backblaze.com/b2/hard-drive-test-data.html).
+
+In each of the codes, make sure you change the filePathRoot of where you save your data. Once you downloaded data_xxxx.zip file, extract it to the data_xxxx directory, and don't make any changes within the directory.
+```{r}
+filePathRoot <- "C:/Users/Chinpei/Documents/R/HardDriveReliability/"
+```
+
+* harddrive_readdata.R: Create the RData files for time series plotting and survival analysis for each year.
+* harddrive_quickloaddata.R: Quick plot of the imported data from harddrive_readdata.R.
+* harddrive_allsurvivalanalysis_savedata.R, harddrive_brandSurvivalAnalysis.R, harddrive_sizesurvivalanalysis_savedata.R: Create the RData file of full set of available data (2013, 2014, 2015 and 2016) for survival analysis. Due to time limitation, the authors did not make the convenience to select different function and filePathRoot setup.
+
+Disclaimer: Use the codes and analysis results at your own risk. This project is mainly for exercise purpose. The codes and analysis results comes with no warranty. The author is not responsible for the consequence that may result in any form of lost should the reader use the result from this codes and analysis.
+
+#Acknowledgment
+The author would like to acknowledge Backblaze huge effort in logging the hard drive data and making them open source. The work is impossible without their hard work. The author would also like to thank the mentor Jeff Lipkowitz for introducing survival analysis for this work. Finally, thanks to Springboard for providing the platform for the author to learn data science.

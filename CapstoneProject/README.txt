@@ -1,3 +1,7 @@
+Please read the presentation FinalPresentation_HardDrive.pptx and report FinalReport_HardDrive.html (please download and open in browser) for details.
+
+xxxxxxxxxxxx
+
 Since importing data is time consuming, two files are created: one for importing data (harddrive_readdata.R), and another for processing data (harddrive_quickloaddata.R).
 
 6 major functions are currently programmed:
