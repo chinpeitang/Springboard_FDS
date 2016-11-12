@@ -17,7 +17,7 @@ rm(list = ls(all = TRUE))
 ########
 # INPUTS
 ########
-# What data file to create?
+# What data file to create? [Uncomment to use the corresponding "ImportFunction"]
 # Count only total number of drive and failure each day
 #ImportFunction <- "totalDriveCnt_FailureCnt"
 # Count number of drive for each BRAND and the number of failure of each BRAND each day
@@ -26,19 +26,23 @@ rm(list = ls(all = TRUE))
 #ImportFunction <- "sizeDriveCnt_FailureCnt"
 # Survival analysis of full data
 #ImportFunction <- "allSurvivalAnalysis"
-# Survival analysis for different brand
+# Survival analysis for different BRAND
 #ImportFunction <- "brandSurvivalAnalysis"
-# Survival analysis for different size
-ImportFunction <- "sizeSurvivalAnalysis"
-
+# Survival analysis for different SIZE
+#ImportFunction <- "sizeSurvivalAnalysis"
+# Otherwise function
 #ImportFunction <- "otherwise"
 
-# Test or production?
-ProductionOrTest <- "Production"
+# Test or production? [Uncomment to use the corresponding "ProductionOrTest"]
+#ProductionOrTest <- "Production"
 #ProductionOrTest <- "Test"
 
-# Change this for different year of 2013, 2014 or 2015. It will automatically read the appropriate data.
-year <- 2015
+# Change this for different year directory. It will automatically read the appropriate data.
+#year <- "2013"
+#year <- "2014"
+#year <- "2015"
+#year <- "Q1_2016"
+#year <- "Q2_2016"
 
 # Where the root of the data is (which can be adjusted)
 filePathRoot <- "C:/Users/Chinpei/Documents/R/HardDriveReliability/"
@@ -53,11 +57,15 @@ filePathRoot <- "C:/Users/Chinpei/Documents/R/HardDriveReliability/"
 switch(ProductionOrTest,
   Production = {
     # Set file path and list all the csv files based on different years (2013, 2014, 2015)
-    filePathDir <- paste("data_", as.character(year), "/", as.character(year), sep = "") 
+    if (year == "2013" | year == "2014" | year == "2015") {
+      filePathDir <- paste("data_", year, "/", year, sep = "")
+    } else {
+      filePathDir <- paste("data_", year, "/", "data_", year, sep = "")
+    }
     filePath <- paste(filePathRoot, filePathDir, sep = "")
   },
   Test = {
-    year <- 2015 # force year to 2015
+    year <- "2015" # force year to 2015
     filePath <- "C:/Users/Chinpei/Documents/R/HardDriveReliability/data2015_chunk15"
     #filePath <- "C:/Users/Chinpei/Documents/R/HardDriveReliability/data2015_chunk60"
     #filePath <- "C:/Users/Chinpei/Documents/R/HardDriveReliability/data2015_chunk90"
@@ -71,7 +79,7 @@ fileList <- list.files(path = filePath, pattern = "*.csv")
 numFile <- length(fileList)
 
 # File name in the format of hdyyyy
-dataVarName <- paste("hd", as.character(year), sep = "")
+dataVarName <- paste("hd", year, sep = "")
 dataFileName <- dataVarName
 
 ###########################
@@ -81,8 +89,8 @@ dataFileName <- dataVarName
 #  model ("character"), capacity in bytes ("numeric"), 
 #  binary failure ("integer"), 90 SMART data ("numeric")
 
-# 2015 has 90 SMART, 2013 and 2014 have 80 SMART
-if (year == 2015) {numSMART <- 90} else {numSMART <- 80}
+# 2015 and 2016 has 90 SMART, 2013 and 2014 have 80 SMART
+if (year == "2015" | year == "Q1_2016" | year == "Q2_2016") {numSMART <- 90} else {numSMART <- 80}
 
 # Importing all data takes up too much memory, select only necessary data
 # Select the corresponding columns to input. "NULL" those are not interested.
@@ -318,7 +326,7 @@ for (i in 1:numFile) {
                    temp_df$Toshiba, temp_df$WDC, temp_df$Seagate)
       
       # Rename the columns
-      names(data_brandSurvivalAnalysis_df) <- 
+      names(data_brandSurvivalAnalysis_temp_df) <- 
         c("serial_number", "failure", "HGST", "Hitachi", "Samsung", "Toshiba", "WDC", "Seagate")
       
     }, # end totalBrandDriveCnt_FailureCnt
